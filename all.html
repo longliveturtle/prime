@@ -1,0 +1,1257 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>JabRef references</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript">
+<!--
+// QuickSearch script for JabRef HTML export 
+// Version: 3.0
+//
+// Copyright (c) 2006-2011, Mark Schenk
+//
+// This software is distributed under a Creative Commons Attribution 3.0 License
+// http://creativecommons.org/licenses/by/3.0/
+//
+// Features:
+// - intuitive find-as-you-type searching
+//    ~ case insensitive
+//    ~ ignore diacritics (optional)
+//
+// - search with/without Regular Expressions
+// - match BibTeX key
+//
+
+// Search settings
+var searchAbstract = true;	// search in abstract
+var searchReview = true;	// search in review
+
+var noSquiggles = true; 	// ignore diacritics when searching
+var searchRegExp = false; 	// enable RegExp searches
+
+
+if (window.addEventListener) {
+	window.addEventListener("load",initSearch,false); }
+else if (window.attachEvent) {
+	window.attachEvent("onload", initSearch); }
+
+function initSearch() {
+	// check for quick search table and searchfield
+	if (!document.getElementById('qs_table')||!document.getElementById('quicksearch')) { return; }
+
+	// load all the rows and sort into arrays
+	loadTableData();
+	
+	//find the query field
+	qsfield = document.getElementById('qs_field');
+
+	// previous search term; used for speed optimisation
+	prevSearch = '';
+
+	//find statistics location
+	stats = document.getElementById('stat');
+	setStatistics(-1);
+	
+	// set up preferences
+	initPreferences();
+
+	// shows the searchfield
+	document.getElementById('quicksearch').style.display = 'block';
+	document.getElementById('qs_field').onkeyup = quickSearch;
+}
+
+function loadTableData() {
+	// find table and appropriate rows
+	searchTable = document.getElementById('qs_table');
+	var allRows = searchTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+	// split all rows into entryRows and infoRows (e.g. abstract, review, bibtex)
+	entryRows = new Array(); infoRows = new Array(); absRows = new Array(); revRows = new Array();
+
+	// get data from each row
+	entryRowsData = new Array(); absRowsData = new Array(); revRowsData = new Array(); 
+	
+	BibTeXKeys = new Array();
+	
+	for (var i=0, k=0, j=0; i<allRows.length;i++) {
+		if (allRows[i].className.match(/entry/)) {
+			entryRows[j] = allRows[i];
+			entryRowsData[j] = stripDiacritics(getTextContent(allRows[i]));
+			allRows[i].id ? BibTeXKeys[j] = allRows[i].id : allRows[i].id = 'autokey_'+j;
+			j ++;
+		} else {
+			infoRows[k++] = allRows[i];
+			// check for abstract/review
+			if (allRows[i].className.match(/abstract/)) {
+				absRows.push(allRows[i]);
+				absRowsData[j-1] = stripDiacritics(getTextContent(allRows[i]));
+			} else if (allRows[i].className.match(/review/)) {
+				revRows.push(allRows[i]);
+				revRowsData[j-1] = stripDiacritics(getTextContent(allRows[i]));
+			}
+		}
+	}
+	//number of entries and rows
+	numEntries = entryRows.length;
+	numInfo = infoRows.length;
+	numAbs = absRows.length;
+	numRev = revRows.length;
+}
+
+function quickSearch(){
+	
+	tInput = qsfield;
+
+	if (tInput.value.length == 0) {
+		showAll();
+		setStatistics(-1);
+		qsfield.className = '';
+		return;
+	} else {
+		t = stripDiacritics(tInput.value);
+
+		if(!searchRegExp) { t = escapeRegExp(t); }
+			
+		// only search for valid RegExp
+		try {
+			textRegExp = new RegExp(t,"i");
+			closeAllInfo();
+			qsfield.className = '';
+		}
+			catch(err) {
+			prevSearch = tInput.value;
+			qsfield.className = 'invalidsearch';
+			return;
+		}
+	}
+	
+	// count number of hits
+	var hits = 0;
+
+	// start looping through all entry rows
+	for (var i = 0; cRow = entryRows[i]; i++){
+
+		// only show search the cells if it isn't already hidden OR if the search term is getting shorter, then search all
+		if(cRow.className.indexOf('noshow')==-1 || tInput.value.length <= prevSearch.length){
+			var found = false; 
+
+			if (entryRowsData[i].search(textRegExp) != -1 || BibTeXKeys[i].search(textRegExp) != -1){ 
+				found = true;
+			} else {
+				if(searchAbstract && absRowsData[i]!=undefined) {
+					if (absRowsData[i].search(textRegExp) != -1){ found=true; } 
+				}
+				if(searchReview && revRowsData[i]!=undefined) {
+					if (revRowsData[i].search(textRegExp) != -1){ found=true; } 
+				}
+			}
+			
+			if (found){
+				cRow.className = 'entry show';
+				hits++;
+			} else {
+				cRow.className = 'entry noshow';
+			}
+		}
+	}
+
+	// update statistics
+	setStatistics(hits)
+	
+	// set previous search value
+	prevSearch = tInput.value;
+}
+
+
+// Strip Diacritics from text
+// http://stackoverflow.com/questions/990904/javascript-remove-accents-in-strings
+
+// String containing replacement characters for stripping accents 
+var stripstring = 
+    'AAAAAAACEEEEIIII'+
+    'DNOOOOO.OUUUUY..'+
+    'aaaaaaaceeeeiiii'+
+    'dnooooo.ouuuuy.y'+
+    'AaAaAaCcCcCcCcDd'+
+    'DdEeEeEeEeEeGgGg'+
+    'GgGgHhHhIiIiIiIi'+
+    'IiIiJjKkkLlLlLlL'+
+    'lJlNnNnNnnNnOoOo'+
+    'OoOoRrRrRrSsSsSs'+
+    'SsTtTtTtUuUuUuUu'+
+    'UuUuWwYyYZzZzZz.';
+
+function stripDiacritics(str){
+
+    if(noSquiggles==false){
+        return str;
+    }
+
+    var answer='';
+    for(var i=0;i<str.length;i++){
+        var ch=str[i];
+        var chindex=ch.charCodeAt(0)-192;   // Index of character code in the strip string
+        if(chindex>=0 && chindex<stripstring.length){
+            // Character is within our table, so we can strip the accent...
+            var outch=stripstring.charAt(chindex);
+            // ...unless it was shown as a '.'
+            if(outch!='.')ch=outch;
+        }
+        answer+=ch;
+    }
+    return answer;
+}
+
+// http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+// NOTE: must escape every \ in the export code because of the JabRef Export...
+function escapeRegExp(str) {
+  return str.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
+
+function toggleInfo(articleid,info) {
+
+	var entry = document.getElementById(articleid);
+	var abs = document.getElementById('abs_'+articleid);
+	var rev = document.getElementById('rev_'+articleid);
+	var bib = document.getElementById('bib_'+articleid);
+	
+	if (abs && info == 'abstract') {
+		abs.className.indexOf('noshow') == -1?abs.className = 'abstract noshow':abs.className = 'abstract show';
+	} else if (rev && info == 'review') {
+		rev.className.indexOf('noshow') == -1?rev.className = 'review noshow':rev.className = 'review show';
+	} else if (bib && info == 'bibtex') {
+		bib.className.indexOf('noshow') == -1?bib.className = 'bibtex noshow':bib.className = 'bibtex show';
+	} else { 
+		return;
+	}
+
+	// check if one or the other is available
+	var revshow; var absshow; var bibshow;
+	(abs && abs.className.indexOf('noshow') == -1)? absshow = true: absshow = false;
+	(rev && rev.className.indexOf('noshow') == -1)? revshow = true: revshow = false;	
+	(bib && bib.className.indexOf('noshow') == -1)? bibshow = true: bibshow = false;
+	
+	// highlight original entry
+	if(entry) {
+		if (revshow || absshow || bibshow) {
+		entry.className = 'entry highlight show';
+		} else {
+		entry.className = 'entry show';
+		}
+	}
+	
+	// When there's a combination of abstract/review/bibtex showing, need to add class for correct styling
+	if(absshow) {
+		(revshow||bibshow)?abs.className = 'abstract nextshow':abs.className = 'abstract';
+	} 
+	if (revshow) {
+		bibshow?rev.className = 'review nextshow': rev.className = 'review';
+	}	
+	
+}
+
+function setStatistics (hits) {
+	if(hits < 0) { hits=numEntries; }
+	if(stats) { stats.firstChild.data = hits + '/' + numEntries}
+}
+
+function getTextContent(node) {
+	// Function written by Arve Bersvendsen
+	// http://www.virtuelvis.com
+	
+	if (node.nodeType == 3) {
+	return node.nodeValue;
+	} // text node
+	if (node.nodeType == 1 && node.className != "infolinks") { // element node
+	var text = [];
+	for (var chld = node.firstChild;chld;chld=chld.nextSibling) {
+		text.push(getTextContent(chld));
+	}
+	return text.join("");
+	} return ""; // some other node, won't contain text nodes.
+}
+
+function showAll(){
+	closeAllInfo();
+	for (var i = 0; i < numEntries; i++){ entryRows[i].className = 'entry show'; }
+}
+
+function closeAllInfo(){
+	for (var i=0; i < numInfo; i++){
+		if (infoRows[i].className.indexOf('noshow') ==-1) {
+			infoRows[i].className = infoRows[i].className + ' noshow';
+		}
+	}
+}
+
+function clearQS() {
+	qsfield.value = '';
+	showAll();
+}
+
+function redoQS(){
+	showAll();
+	quickSearch(qsfield);
+}
+
+function updateSetting(obj){
+	var option = obj.id;
+	var checked = obj.value;
+
+	switch(option)
+	 {
+	 case "opt_searchAbs":
+	   searchAbstract=!searchAbstract;
+	   redoQS();
+	   break;
+	 case "opt_searchRev":
+	   searchReview=!searchReview;
+	   redoQS();
+	   break;
+	 case "opt_useRegExp":
+	   searchRegExp=!searchRegExp;
+	   redoQS();
+	   break;
+	 case "opt_noAccents":
+	   noSquiggles=!noSquiggles;
+	   loadTableData();
+	   redoQS();
+	   break;
+	 }
+}
+
+function initPreferences(){
+	if(searchAbstract){document.getElementById("opt_searchAbs").checked = true;}
+	if(searchReview){document.getElementById("opt_searchRev").checked = true;}
+	if(noSquiggles){document.getElementById("opt_noAccents").checked = true;}
+	if(searchRegExp){document.getElementById("opt_useRegExp").checked = true;}
+	
+	if(numAbs==0) {document.getElementById("opt_searchAbs").parentNode.style.display = 'none';}
+	if(numRev==0) {document.getElementById("opt_searchRev").parentNode.style.display = 'none';}
+}
+
+function toggleSettings(){
+	var togglebutton = document.getElementById('showsettings');
+	var settings = document.getElementById('settings');
+	
+	if(settings.className == "hidden"){
+		settings.className = "show";
+		togglebutton.innerText = "close settings";
+		togglebutton.textContent = "close settings";
+	}else{
+		settings.className = "hidden";
+		togglebutton.innerText = "settings...";		
+		togglebutton.textContent = "settings...";
+	}
+}
+
+-->
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'] ], <!-- inline math chỉ dùng 1 dấu dollar $ -->
+      processEscapes: true
+    },
+    CommonHTML: { linebreaks: { automatic: true } },
+   "HTML-CSS": { linebreaks: { automatic: true } },
+    SVG: { linebreaks: { automatic: true } }
+  });
+</script>
+
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<style type="text/css">
+body { background-color: white; font-family: Arial, sans-serif; font-size: 13px; line-height: 1.2; padding: 1em; color: #2E2E2E; margin: auto 2em; }
+
+form#quicksearch { width: auto; border-style: solid; border-color: gray; border-width: 1px 0px; padding: 0.7em 0.5em; display:none; position:relative; }
+span#searchstat {padding-left: 1em;}
+
+div#settings { margin-top:0.7em; /* border-bottom: 1px transparent solid; background-color: #efefef; border: 1px grey solid; */ }
+div#settings ul {margin: 0; padding: 0; }
+div#settings li {margin: 0; padding: 0 1em 0 0; display: inline; list-style: none; }
+div#settings li + li { border-left: 2px #efefef solid; padding-left: 0.5em;}
+div#settings input { margin-bottom: 0px;}
+
+div#settings.hidden {display:none;}
+
+#showsettings { border: 1px grey solid; padding: 0 0.5em; float:right; line-height: 1.6em; text-align: right; }
+#showsettings:hover { cursor: pointer; }
+
+.invalidsearch { background-color: red; }
+input[type="button"] { background-color: #efefef; border: 1px #2E2E2E solid;}
+
+table { width: 100%; empty-cells: show; border-spacing: 0em 0.2em; margin: 1em 0em; border-style: none; }
+th, td { border: 1px gray solid; border-width: 1px 1px; padding: 0.5em; vertical-align: top; text-align: left; }
+th { background-color: #efefef; }
+td + td, th + th { border-left: none; }
+
+td a { color: navy; text-decoration: none; }
+td a:hover  { text-decoration: underline; }
+
+tr.noshow { display: none;}
+tr.highlight td { background-color: #EFEFEF; border-top: 2px #2E2E2E solid; font-weight: bold; }
+tr.abstract td, tr.review td, tr.bibtex td { background-color: #EFEFEF; text-align: justify; border-bottom: 2px #2E2E2E solid; }
+tr.nextshow td { border-bottom: 1px gray solid; }
+
+tr.bibtex pre { width: 100%; overflow: auto; white-space: pre-wrap;}
+p.infolinks { margin: 0.3em 0em 0em 0em; padding: 0px; }
+
+@media print {
+	p.infolinks, #qs_settings, #quicksearch, t.bibtex { display: none !important; }
+	tr { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<form action="" id="quicksearch">
+<input type="text" id="qs_field" autocomplete="off" placeholder="Type to search..." /> <input type="button" onclick="clearQS()" value="clear" />
+<span id="searchstat">Matching entries: <span id="stat">0</span></span> <span style="text-align: center; color: #006600"><b>TÀI LIỆU TỰ HỌC R PROGRAMMING | DATA VISUALIZATION | STATISTICS | MACHINE LEARNING | AND RELATED TOPICS FOR PERSONAL USE | <a href="https://tailieur.netlify.app/" target="_blank">LINK GỐC</a> </b></span>
+<div id="showsettings" onclick="toggleSettings()">settings...</div>
+<div id="settings" class="hidden">
+<ul>
+<li><input type="checkbox" class="search_setting" id="opt_searchAbs" onchange="updateSetting(this)"><label for="opt_searchAbs"> include abstract</label></li>
+<li><input type="checkbox" class="search_setting" id="opt_searchRev" onchange="updateSetting(this)"><label for="opt_searchRev"> include review</label></li>
+<li><input type="checkbox" class="search_setting" id="opt_useRegExp" onchange="updateSetting(this)"><label for="opt_useRegExp"> use RegExp</label></li>
+<li><input type="checkbox" class="search_setting" id="opt_noAccents" onchange="updateSetting(this)"><label for="opt_noAccents"> ignore accents</label></li>
+</ul>
+</div>
+</form>
+
+<! -- THAY ĐỔI KHOẢNG CÁCH CỘT --> 
+
+<table id="qs_table" border="1">
+<thead><tr><th width="10%">Trang bìa</th>
+	   <th width="15%">Tác giả</th>
+       <th width="20%">Tựa đề</th>
+	   <th width="25%">Ghi chú</th>
+	   <th width="5%">Năm</th>
+	   <th width="15%">Nguồn</th>
+	   <th width="5%">Loại</th>
+	   <th width="5%">URL</th></tr>
+</thead>
+<tbody>
+
+<tr id="donnelly2023" class="entry">
+    <td><img src="" width="100" height="150"/></td>
+	<td>Donnelly, R., Lin, Z. and Umberson, D.</td>
+	<td>Parental Death Across the Life Course, Social Isolation, and Health in Later Life: Racial/Ethnic Disadvantage in the U.S. <p class="infolinks">[<a href="javascript:toggleInfo('donnelly2023','bibtex')">BibTeX</a>]</p></td>
+	<td>Case study HRS<br/></td>
+	<td>2023</td>
+	<td>Social Forces, pp. 1-24&nbsp;</td>
+	<td>article</td>
+	<td><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10569383/pdf/soad027.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_donnelly2023" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@article{donnelly2023,
+  author = {Rachel Donnelly and Zhiyong Lin and Debra Umberson},
+  title = {Parental Death Across the Life Course, Social Isolation, and Health in Later Life: Racial/Ethnic Disadvantage in the U.S.},
+  journal = {Social Forces},
+  year = {2023},
+  pages = {1--24},
+  note = {Case study HRS},
+  url = {https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10569383/pdf/soad027.pdf}
+}
+</pre></td>
+</tr>
+<tr id="shang2023" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/shang_discrete_choice_experiments_using_r.png" width="100" height="150"/></td>
+	<td>Shang, L. and Chandra, Y.</td>
+	<td>Discrete choice experiments using R: a how-to guide for social and managerial sciences <p class="infolinks">[<a href="javascript:toggleInfo('shang2023','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2023</td>
+	<td>Springer&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/shang_discrete_choice_experiments_using_r.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_shang2023" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{shang2023,
+  author = {Liang Shang and Yanto Chandra},
+  title = {Discrete choice experiments using R: a how-to guide for social and managerial sciences},
+  publisher = {Springer},
+  year = {2023},
+  url = {https://tailieur.netlify.app/ref/shang_discrete_choice_experiments_using_r.pdf}
+}
+</pre></td>
+</tr>
+<tr id="paez2022" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/paez_discrete_choice_analysis_with_r.png" width="100" height="150"/></td>
+	<td>Páez, A. and Boisjoly, G.</td>
+	<td>Discrete choice analysis with R <p class="infolinks">[<a href="javascript:toggleInfo('paez2022','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2022</td>
+	<td>Springer&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/paez_discrete_choice_analysis_with_r.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_paez2022" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{paez2022,
+  author = {Antonio Páez and Geneviève Boisjoly},
+  title = {Discrete choice analysis with R},
+  publisher = {Springer},
+  year = {2022},
+  url = {https://tailieur.netlify.app/ref/paez_discrete_choice_analysis_with_r.pdf}
+}
+</pre></td>
+</tr>
+<tr id="nhh2021" class="entry">
+    <td><img src="https://applyr.netlify.app/ref/giao_trinh_xac_suat_thong_ke.png" width="100" height="150"/></td>
+	<td>Hoàng, N.H., Đông, N.T., Phong, N.V., Liên, D.T.P., Duy, N.T. and Khuê, V.T.B.</td>
+	<td>Giáo trình lý thuyết xác suất và thống kê ứng dụng <p class="infolinks">[<a href="javascript:toggleInfo('nhh2021','bibtex')">BibTeX</a>]</p></td>
+	<td>• Cách tính khoảng tin cậy (mục 3.3.3.2 trang 98)<br>• Phân tích phương sai (chương 5 trang 188)<br/></td>
+	<td>2021</td>
+	<td>Trường Đại học Tài chính - Marketing&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://applyr.netlify.app/ref/giao_trinh_xac_suat_thong_ke.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_nhh2021" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{nhh2021,
+  author = {Nguyễn Huy Hoàng and Nguyễn Trung Đông and Nguyễn Văn Phong and Dương Thị Phương Liên and Nguyễn Tuấn Duy and Võ Thị Bích Khuê},
+  title = {Giáo trình lý thuyết xác suất và thống kê ứng dụng},
+  publisher = {Trường Đại học Tài chính - Marketing},
+  year = {2021},
+  note = {• Cách tính khoảng tin cậy (mục 3.3.3.2 trang 98)<br>• Phân tích phương sai (chương 5 trang 188)},
+  url = {https://applyr.netlify.app/ref/giao_trinh_xac_suat_thong_ke.pdf}
+}
+</pre></td>
+</tr>
+<tr id="frost2020" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/frost_hypothesis_testing.png" width="100" height="150"/></td>
+	<td>Frost, J.</td>
+	<td>Hypothesis Testing <p class="infolinks">[<a href="javascript:toggleInfo('frost2020','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2020</td>
+	<td>&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/frost_hypothesis_testing.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_frost2020" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{frost2020,
+  author = {Jim Frost},
+  title = {Hypothesis Testing},
+  year = {2020},
+  url = {https://tailieur.netlify.app/ref/frost_hypothesis_testing.pdf}
+}
+</pre></td>
+</tr>
+<tr id="gong2020" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/network.png" width="100" height="150"/></td>
+	<td>Gong, B.-g.</td>
+	<td>Network Analysis: Theory and Concept | Practice Using igraph and Gephi <p class="infolinks">[<a href="javascript:toggleInfo('gong2020','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2020</td>
+	<td>&nbsp;</td>
+	<td>misc</td>
+	<td><a href="https://youtu.be/o5-o1EPSWZg" target="_blank">[URL]</a><br>
+	<a href="https://studyr.netlify.app/ref/vCIES2020_Network-Analysis-master.zip" target="_blank">[URL_1]</a><br>
+	<a href="https://drive.google.com/drive/folders/1p-SI-HshRMkpmepM3bW9L9rziHHpxcn_?usp=drive_link" target="_blank">[URL_2]</a></td>
+</tr>
+<tr id="bib_gong2020" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@misc{gong2020,
+  author = {Byoung-gyu Gong},
+  title = {Network Analysis: Theory and Concept | Practice Using igraph and Gephi},
+  year = {2020},
+  url = {https://youtu.be/o5-o1EPSWZg},
+  url_1 = {https://studyr.netlify.app/ref/vCIES2020_Network-Analysis-master.zip},
+  url_2 = {https://drive.google.com/drive/folders/1p-SI-HshRMkpmepM3bW9L9rziHHpxcn_?usp=drive_link}
+}
+</pre></td>
+</tr>
+<tr id="lock2020" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/statistics_unlocking_the_power_of_data_2020.png" width="100" height="150"/></td>
+	<td>Lock, R., Lock, P., Morgan, K., Lock, E. and Lock, D.</td>
+	<td>Statistics: Unlocking the Power of Data <p class="infolinks">[<a href="javascript:toggleInfo('lock2020','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2020</td>
+	<td>Wiley&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/statistics_unlocking_the_power_of_data_2020.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_lock2020" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{lock2020,
+  author = {Lock, R.H. and Lock, P.F. and Morgan, K.L. and Lock, E.F. and Lock, D.F.},
+  title = {Statistics: Unlocking the Power of Data},
+  publisher = {Wiley},
+  year = {2020},
+  edition = {3},
+  url = {https://studyr.netlify.app/ref/statistics_unlocking_the_power_of_data_2020.pdf}
+}
+</pre></td>
+</tr>
+<tr id="mcelreath2020" class="entry">
+    <td><img src="https://applyr.netlify.app/ref/mcelreath_2020_statistical_rethinking.png" width="100" height="150"/></td>
+	<td>McElreath, R.</td>
+	<td>Statistical Rethinking <p class="infolinks">[<a href="javascript:toggleInfo('mcelreath2020','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2020</td>
+	<td>CRC Press&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://applyr.netlify.app/ref/mcelreath_2020_statistical_rethinking.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_mcelreath2020" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{mcelreath2020,
+  author = {Richard McElreath},
+  title = {Statistical Rethinking},
+  publisher = {CRC Press},
+  year = {2020},
+  edition = {2},
+  url = {https://applyr.netlify.app/ref/mcelreath_2020_statistical_rethinking.pdf}
+}
+</pre></td>
+</tr>
+<tr id="chisquared_1" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/chi_squared_test_1.png" width="100" height="150"/></td>
+	<td>Donovan, K.</td>
+	<td>Chi-squared test for independence <p class="infolinks">[<a href="javascript:toggleInfo('chisquared_1','bibtex')">BibTeX</a>]</p></td>
+	<td>• Bài tập ${\chi ^2}$ Chi-squared kiểm định mối quan hệ giữa hai biến định tính<br>• Bài tập Fisher's exact test<br/></td>
+	<td>2019</td>
+	<td>&nbsp;</td>
+	<td>misc</td>
+	<td><a href="https://kmdono02.github.io/Data_Analysis_with_R_IBIS/working-with-tables-in-r.html" target="_blank">[URL]</a><br>
+	<a href="https://tailieur.netlify.app/ref/chi_squared_test_1.pdf" target="_blank">[URL_1]</a><br>
+	<a href="https://kmdono02.github.io/Data_Analysis_with_R_IBIS/working-with-tables-in-r.html" target="_blank">[URL_2]</a></td>
+</tr>
+<tr id="bib_chisquared_1" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@misc{chisquared_1,
+  author = {Kevin Donovan},
+  title = {Chi-squared test for independence},
+  year = {2019},
+  note = {• Bài tập &chi; ^2 Chi-squared kiểm định mối quan hệ giữa hai biến định tính<br>• Bài tập Fisher's exact test},
+  url = {https://kmdono02.github.io/Data_Analysis_with_R_IBIS/working-with-tables-in-r.html},
+  url_1 = {https://tailieur.netlify.app/ref/chi_squared_test_1.pdf},
+  url_2 = {https://kmdono02.github.io/Data_Analysis_with_R_IBIS/working-with-tables-in-r.html}
+}
+</pre></td>
+</tr>
+<tr id="frost2019" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/frost_introduction_to_statistics.png" width="100" height="150"/></td>
+	<td>Frost, J.</td>
+	<td>Introduction to Statistics <p class="infolinks">[<a href="javascript:toggleInfo('frost2019','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2019</td>
+	<td>&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/frost_introduction_to_statistics.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_frost2019" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{frost2019,
+  author = {Jim Frost},
+  title = {Introduction to Statistics},
+  year = {2019},
+  url = {https://tailieur.netlify.app/ref/frost_introduction_to_statistics.pdf}
+}
+</pre></td>
+</tr>
+<tr id="frost2019_regression" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/frost_regression_analysis.png" width="100" height="150"/></td>
+	<td>Frost, J.</td>
+	<td>Regression Analysis <p class="infolinks">[<a href="javascript:toggleInfo('frost2019_regression','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2019</td>
+	<td>&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/frost_regression_analysis.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_frost2019_regression" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{frost2019_regression,
+  author = {Jim Frost},
+  title = {Regression Analysis},
+  year = {2019},
+  url = {https://tailieur.netlify.app/ref/frost_regression_analysis.pdf}
+}
+</pre></td>
+</tr>
+<tr id="kassambara2017" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/kassambara_principal_component_methods.png" width="100" height="150"/></td>
+	<td>Kassambara, A.</td>
+	<td>Practical Guide to Principal Component Methods in R <p class="infolinks">[<a href="javascript:toggleInfo('kassambara2017','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2017</td>
+	<td>STHDA&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/kassambara_principal_component_methods.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_kassambara2017" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{kassambara2017,
+  author = {Alboukadel Kassambara},
+  title = {Practical Guide to Principal Component Methods in R},
+  publisher = {STHDA},
+  year = {2017},
+  url = {https://studyr.netlify.app/ref/kassambara_principal_component_methods.pdf}
+}
+</pre></td>
+</tr>
+<tr id="le2016" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/introductory_biostatistics_2016.png" width="100" height="150"/></td>
+	<td>Le, C.T. and Eberly, L.E.</td>
+	<td>Introductory Biostatistics <p class="infolinks">[<a href="javascript:toggleInfo('le2016','bibtex')">BibTeX</a>]</p></td>
+	<td>• Cách tính khoảng tin cậy (trang 147 / pdf 169)<br/></td>
+	<td>2016</td>
+	<td>Wiley&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/introductory_biostatistics_2016.pdf" target="_blank">[URL]</a><br>
+	<a href="https://studyr.netlify.app/ref/introductory_biostatistics_2016_dataset.zip" target="_blank">[URL_1]</a><br>
+	</td>
+</tr>
+<tr id="bib_le2016" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{le2016,
+  author = {Le, Chap T. and Lynn E. Eberly},
+  title = {Introductory Biostatistics},
+  publisher = {Wiley},
+  year = {2016},
+  edition = {2},
+  note = {• Cách tính khoảng tin cậy (trang 147 / pdf 169)},
+  url = {https://studyr.netlify.app/ref/introductory_biostatistics_2016.pdf},
+  url_1 = {https://studyr.netlify.app/ref/introductory_biostatistics_2016_dataset.zip}
+}
+</pre></td>
+</tr>
+<tr id="nxt2016" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/phan_tich_so_lieu_thi_nghiem_va_cong_bo_ket_qua_nghien_cuu_chan_nuoi.png" width="100" height="150"/></td>
+	<td>Trạch, N.X. and Lực, Đ.Đ.</td>
+	<td>Phân tích số liệu thí nghiệm và công bố kết quả nghiên cứu chăn nuôi <p class="infolinks">[<a href="javascript:toggleInfo('nxt2016','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2016</td>
+	<td>NXB Đại học Nông nghiệp&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/phan_tich_so_lieu_thi_nghiem_va_cong_bo_ket_qua_nghien_cuu_chan_nuoi.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_nxt2016" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{nxt2016,
+  author = {Nguyễn Xuân Trạch and Đỗ Đức Lực},
+  title = {Phân tích số liệu thí nghiệm và công bố kết quả nghiên cứu chăn nuôi},
+  publisher = {NXB Đại học Nông nghiệp},
+  year = {2016},
+  url = {https://tailieur.netlify.app/ref/phan_tich_so_lieu_thi_nghiem_va_cong_bo_ket_qua_nghien_cuu_chan_nuoi.pdf}
+}
+</pre></td>
+</tr>
+<tr id="wickham2016" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/wickham_2016_ggplot2.png" width="100" height="150"/></td>
+	<td>Wickham, H.</td>
+	<td>ggplot2 <p class="infolinks">[<a href="javascript:toggleInfo('wickham2016','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2016</td>
+	<td>Springer&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/wickham_2016_ggplot2.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_wickham2016" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{wickham2016,
+  author = {Hadley Wickham},
+  title = {ggplot2},
+  publisher = {Springer},
+  year = {2016},
+  edition = {2},
+  url = {https://studyr.netlify.app/ref/wickham_2016_ggplot2.pdf}
+}
+</pre></td>
+</tr>
+<tr id="crawley2015" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/crawley_2015_statistics_an_introduction_in_r_2nd_edition.png" width="100" height="150"/></td>
+	<td>Crawley, M.J.</td>
+	<td>Statistics - An Introduction in R (2nd edition) <p class="infolinks">[<a href="javascript:toggleInfo('crawley2015','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2015</td>
+	<td>Wiley&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/crawley_2015_statistics_an_introduction_in_r_2nd_edition.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_crawley2015" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{crawley2015,
+  author = {Crawley, Michael J.},
+  title = {Statistics - An Introduction in R (2nd edition)},
+  publisher = {Wiley},
+  year = {2015},
+  edition = {2},
+  url = {https://studyr.netlify.app/ref/crawley_2015_statistics_an_introduction_in_r_2nd_edition.pdf}
+}
+</pre></td>
+</tr>
+<tr id="tkt2015" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/bai_giang_kinh_te_luong.png" width="100" height="150"/></td>
+	<td>Thanh, T.K., Phong, N.V. and Đông, N.T.</td>
+	<td>Bài giảng Kinh tế lượng <p class="infolinks">[<a href="javascript:toggleInfo('tkt2015','bibtex')">BibTeX</a>]</p></td>
+	<td>• Khái niệm về đa cộng tuyến (chương 5 trang 84)<br/></td>
+	<td>2015</td>
+	<td>Trường Đại học Tài chính - Marketing&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/bai_giang_kinh_te_luong.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_tkt2015" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{tkt2015,
+  author = {Trần Kim Thanh and Nguyễn Văn Phong and Nguyễn Trung Đông},
+  title = {Bài giảng Kinh tế lượng},
+  publisher = {Trường Đại học Tài chính - Marketing},
+  year = {2015},
+  note = {• Khái niệm về đa cộng tuyến (chương 5 trang 84)},
+  url = {https://tailieur.netlify.app/ref/bai_giang_kinh_te_luong.pdf}
+}
+</pre></td>
+</tr>
+<tr id="kiem2010" class="entry">
+    <td><img src="https://applyr.netlify.app/ref/co_so_toan_hoc_cua_cac_phep_xu_ly_thong_ke.png" width="100" height="150"/></td>
+	<td>Kiếm, P.T.</td>
+	<td>Cơ sở toán học của các phép xử lý thống kê trong nghiên cứu khoa học nông nghiệp <p class="infolinks">[<a href="javascript:toggleInfo('kiem2010','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2010</td>
+	<td>NXB Nông nghiệp, Đại học Nông Lâm TP.HCM&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://applyr.netlify.app/ref/co_so_toan_hoc_cua_cac_phep_xu_ly_thong_ke.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_kiem2010" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{kiem2010,
+  author = {Phan Thanh Kiếm},
+  title = {Cơ sở toán học của các phép xử lý thống kê trong nghiên cứu khoa học nông nghiệp},
+  publisher = {NXB Nông nghiệp, Đại học Nông Lâm TP.HCM},
+  year = {2010},
+  url = {https://applyr.netlify.app/ref/co_so_toan_hoc_cua_cac_phep_xu_ly_thong_ke.pdf}
+}
+</pre></td>
+</tr>
+<tr id="kleinbaum2010" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/kleinbaum_logistic_regression.png" width="100" height="150"/></td>
+	<td>Kleinbaum, D.G. and Kleinbaum, M.</td>
+	<td>Logistic regression: a self-learning text <p class="infolinks">[<a href="javascript:toggleInfo('kleinbaum2010','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2010</td>
+	<td>Springer&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/kleinbaum_logistic_regression.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_kleinbaum2010" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{kleinbaum2010,
+  author = {David G. Kleinbaum and Mitchel Kleinbaum},
+  title = {Logistic regression: a self-learning text},
+  publisher = {Springer},
+  year = {2010},
+  edition = {3},
+  url = {https://tailieur.netlify.app/ref/kleinbaum_logistic_regression.pdf}
+}
+</pre></td>
+</tr>
+<tr id="mann2010" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/mann_introductory_statistics_7th.png" width="100" height="150"/></td>
+	<td>Mann, P.S.</td>
+	<td>Introductory Statistics <p class="infolinks">[<a href="javascript:toggleInfo('mann2010','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2010</td>
+	<td>Wiley&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/mann_introductory_statistics_7th.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_mann2010" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{mann2010,
+  author = {Prem S. Mann},
+  title = {Introductory Statistics},
+  publisher = {Wiley},
+  year = {2010},
+  url = {https://tailieur.netlify.app/ref/mann_introductory_statistics_7th.pdf}
+}
+</pre></td>
+</tr>
+<tr id="zuur2009" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/zuur_mixed_effects_models.png" width="100" height="150"/></td>
+	<td>Zuur, A.F., Ieno, E.N., Walker, N.J., Saveliev, A.A. and Smith, G.M.</td>
+	<td>Mixed effects models and extensions in ecology with R <p class="infolinks">[<a href="javascript:toggleInfo('zuur2009','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2009</td>
+	<td>Springer&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/zuur_mixed_effects_models.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_zuur2009" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{zuur2009,
+  author = {Alain F. Zuur and Elena N. Ieno and Neil J. Walker and Anatoly A. Saveliev and Graham M. Smith},
+  title = {Mixed effects models and extensions in ecology with R},
+  publisher = {Springer},
+  year = {2009},
+  url = {https://tailieur.netlify.app/ref/zuur_mixed_effects_models.pdf}
+}
+</pre></td>
+</tr>
+<tr id="dtna2004" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/giao_trinh_phuong_phap_thi_nghiem_dong_ruong.png" width="100" height="150"/></td>
+	<td>Anh, Đ.T.N., Phụ, H.V., Hùng, N.T. and Thảo, H.T.B.</td>
+	<td>Giáo trình phương pháp thí nghiệm đồng ruộng <p class="infolinks">[<a href="javascript:toggleInfo('dtna2004','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2007</td>
+	<td>NXB Nông nghiệp, Trường Đại học Nông Lâm Thái Nguyên&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/giao_trinh_phuong_phap_thi_nghiem_dong_ruong.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_dtna2004" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{dtna2004,
+  author = {Đỗ Thị Ngọc Anh and Hoàng Văn Phụ and Nguyễn Thế Hùng and Hoàng Thị Bích Thảo},
+  title = {Giáo trình phương pháp thí nghiệm đồng ruộng},
+  publisher = {NXB Nông nghiệp, Trường Đại học Nông Lâm Thái Nguyên},
+  year = {2007},
+  url = {https://tailieur.netlify.app/ref/giao_trinh_phuong_phap_thi_nghiem_dong_ruong.pdf}
+}
+</pre></td>
+</tr>
+<tr id="dhh2007" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/huong_dan_giai_bai_toan_xac_suat_thong_ke.png" width="100" height="150"/></td>
+	<td>Hồ, Đ.H.</td>
+	<td>Hướng dẫn giải các bài toán xác suất - thống kê <p class="infolinks">[<a href="javascript:toggleInfo('dhh2007','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2007</td>
+	<td>NXB Đại học Quốc Gia Hà Nội&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/huong_dan_giai_bai_toan_xac_suat_thong_ke.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_dhh2007" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{dhh2007,
+  author = {Đào Hữu Hồ},
+  title = {Hướng dẫn giải các bài toán xác suất - thống kê},
+  publisher = {NXB Đại học Quốc Gia Hà Nội},
+  year = {2007},
+  url = {https://tailieur.netlify.app/ref/huong_dan_giai_bai_toan_xac_suat_thong_ke.pdf}
+}
+</pre></td>
+</tr>
+<tr id="pttt2007" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke.png" width="100" height="150"/></td>
+	<td>Thủy, P.T.T.</td>
+	<td>Giáo trình Thống kê - Phép thí nghiệm <p class="infolinks">[<a href="javascript:toggleInfo('pttt2007','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2007</td>
+	<td>Trường Đại học Cần Thơ&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_1_to_138.pdf" target="_blank">[URL]</a><br>
+	<a href="https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_139_to_276.pdf" target="_blank">[URL_1]</a><br>
+	</td>
+</tr>
+<tr id="bib_pttt2007" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{pttt2007,
+  author = {Phan Thị Thanh Thủy},
+  title = {Giáo trình Thống kê - Phép thí nghiệm},
+  publisher = {Trường Đại học Cần Thơ},
+  year = {2007},
+  url = {https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_1_to_138.pdf},
+  url_1 = {https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_139_to_276.pdf}
+}
+</pre></td>
+</tr>
+<tr id="pttt2007a" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_chuong_10.png" width="100" height="150"/></td>
+	<td>Thủy, P.T.T.</td>
+	<td>Giáo trình Thống kê - Phép thí nghiệm <p class="infolinks">[<a href="javascript:toggleInfo('pttt2007a','bibtex')">BibTeX</a>]</p></td>
+	<td>• Áp dụng cho trường hợp số đếm<br/>Chương 10: Kiểm định Chi bình phương</td>
+	<td>2007</td>
+	<td>Trường Đại học Cần Thơ, pp. 184-191&nbsp;</td>
+	<td>inbook</td>
+	<td><a href="https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_139_to_276.pdf#page=56" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_pttt2007a" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@inbook{pttt2007a,
+  author = {Phan Thị Thanh Thủy},
+  title = {Giáo trình Thống kê - Phép thí nghiệm},
+  publisher = {Trường Đại học Cần Thơ},
+  year = {2007},
+  pages = {184--191},
+  note = {• Áp dụng cho trường hợp số đếm},
+  url = {https://studyr.netlify.app/ref/pttt_2007_giao_trinh_thong_ke_139_to_276.pdf#page=56}
+}
+</pre></td>
+</tr>
+<tr id="campbell2006" class="entry">
+    <td><img src="https://applyr.netlify.app/ref/campbell_2006_statistics_at_square_two.jpg" width="100" height="150"/></td>
+	<td>Campbell, M.J.</td>
+	<td>Statistics at Square Two: Understanding modern statistical applications in medicine <p class="infolinks">[<a href="javascript:toggleInfo('campbell2006','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2006</td>
+	<td>Blackwell Publishing&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://applyr.netlify.app/ref/campbell_2006_statistics_at_square_two.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_campbell2006" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{campbell2006,
+  author = {Michael J. Campbell},
+  title = {Statistics at Square Two: Understanding modern statistical applications in medicine},
+  publisher = {Blackwell Publishing},
+  year = {2006},
+  edition = {2},
+  url = {https://applyr.netlify.app/ref/campbell_2006_statistics_at_square_two.pdf}
+}
+</pre></td>
+</tr>
+<tr id="pxk2005" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/giao_trinh_xac_suat_thong_ke.png" width="100" height="150"/></td>
+	<td>Kiều, P.X.</td>
+	<td>Giáo trình xác suất và thống kê <p class="infolinks">[<a href="javascript:toggleInfo('pxk2005','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2005</td>
+	<td>NXB Giáo dục&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/giao_trinh_xac_suat_thong_ke.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_pxk2005" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{pxk2005,
+  author = {Phạm Xuân Kiều},
+  title = {Giáo trình xác suất và thống kê},
+  publisher = {NXB Giáo dục},
+  year = {2005},
+  url = {https://tailieur.netlify.app/ref/giao_trinh_xac_suat_thong_ke.pdf}
+}
+</pre></td>
+</tr>
+<tr id="huet2004" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/huet_statistical_tools_for_nonlinear_regression.png" width="100" height="150"/></td>
+	<td>Huet, S., A.Bouvier, Poursat, M.-A. and Jolivet, E.</td>
+	<td>Statistical tools for nonlinear regression: a practical guide with S-PLUS and R examples <p class="infolinks">[<a href="javascript:toggleInfo('huet2004','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2004</td>
+	<td>Springer&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/huet_statistical_tools_for_nonlinear_regression.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_huet2004" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{huet2004,
+  author = {S. Huet and A.Bouvier and M.-A. Poursat and E. Jolivet},
+  title = {Statistical tools for nonlinear regression: a practical guide with S-PLUS and R examples},
+  publisher = {Springer},
+  year = {2004},
+  edition = {2},
+  url = {https://tailieur.netlify.app/ref/huet_statistical_tools_for_nonlinear_regression.pdf}
+}
+</pre></td>
+</tr>
+<tr id="ncv2010" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/ly_thuyet_xac_suat_va_thong_ke_toan.png" width="100" height="150"/></td>
+	<td>Văn, N.C. and Ninh, T.T.</td>
+	<td>Giáo trình lý thuyết xác suất và thống kê toán <p class="infolinks">[<a href="javascript:toggleInfo('ncv2010','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2004</td>
+	<td>NXB Thống kê, Đại học Kinh tế Quốc Dân&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://tailieur.netlify.app/ref/ly_thuyet_xac_suat_va_thong_ke_toan.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_ncv2010" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{ncv2010,
+  author = {Nguyễn Cao Văn and Trần Thái Ninh},
+  title = {Giáo trình lý thuyết xác suất và thống kê toán},
+  publisher = {NXB Thống kê, Đại học Kinh tế Quốc Dân},
+  year = {2004},
+  url = {https://tailieur.netlify.app/ref/ly_thuyet_xac_suat_va_thong_ke_toan.pdf}
+}
+</pre></td>
+</tr>
+<tr id="le2003" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/introductory_biostatistics_2003.png" width="100" height="150"/></td>
+	<td>Le, C.T.</td>
+	<td>Introductory Biostatistics <p class="infolinks">[<a href="javascript:toggleInfo('le2003','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td>2003</td>
+	<td>Willey&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://studyr.netlify.app/ref/introductory_biostatistics_2003.pdf" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_le2003" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{le2003,
+  author = {Chap T. Le},
+  title = {Introductory Biostatistics},
+  publisher = {Willey},
+  year = {2003},
+  edition = {1},
+  url = {https://studyr.netlify.app/ref/introductory_biostatistics_2003.pdf}
+}
+</pre></td>
+</tr>
+<tr id="little1978" class="entry">
+    <td><img src="https://studyr.netlify.app/ref/thomas_1978_agricultural_experimentation_design_and_analysis.png" width="100" height="150"/></td>
+	<td>Little, T.M. and Hills, F.J.</td>
+	<td>Agricultural experimentation: Design and Analysis <p class="infolinks">[<a href="javascript:toggleInfo('little1978','bibtex')">BibTeX</a>]</p></td>
+	<td>• Tài liệu rất hay về thống kê cơ bản ứng dụng trong nông nghiệp.<br/></td>
+	<td>1978</td>
+	<td>Wiley&nbsp;</td>
+	<td>book</td>
+	<td><a href="https://ia804707.us.archive.org/0/items/thomas-m-1978-agricultural-experimentation/Thomas%20M%20-%201978%20-%20Agricultural%20experimentation.pdf" target="_blank">[URL]</a><br>
+	<a href="https://studyr.netlify.app/ref/thomas_1978_agricultural_experimentation_design_and_analysis_1_to_184.pdf" target="_blank">[URL_1]</a><br>
+	<a href="https://studyr.netlify.app/ref/thomas_1978_agricultural_experimentation_design_and_analysis_185_to_368.pdf" target="_blank">[URL_2]</a></td>
+</tr>
+<tr id="bib_little1978" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@book{little1978,
+  author = {Little, Thomas M. and Hills, F. Jackson},
+  title = {Agricultural experimentation: Design and Analysis},
+  publisher = {Wiley},
+  year = {1978},
+  note = {• Tài liệu rất hay về thống kê cơ bản ứng dụng trong nông nghiệp.},
+  url = {https://ia804707.us.archive.org/0/items/thomas-m-1978-agricultural-experimentation/Thomas%20M%20-%201978%20-%20Agricultural%20experimentation.pdf},
+  url_1 = {https://studyr.netlify.app/ref/thomas_1978_agricultural_experimentation_design_and_analysis_1_to_184.pdf},
+  url_2 = {https://studyr.netlify.app/ref/thomas_1978_agricultural_experimentation_design_and_analysis_185_to_368.pdf}
+}
+</pre></td>
+</tr>
+<tr id="stata_ca" class="entry">
+    <td><img src="https://tailieur.netlify.app/ref/mvca.png" width="100" height="150"/></td>
+	<td>STATA Manual</td>
+	<td>Simple correspondence analysis <p class="infolinks">[<a href="javascript:toggleInfo('stata_ca','bibtex')">BibTeX</a>]</p></td>
+	<td>• Biện luận đồ thị CA biplot<br/></td>
+	<td></td>
+	<td>&nbsp;</td>
+	<td>misc</td>
+	<td><a href="https://www.stata.com/manuals/mvca.pdf" target="_blank">[URL]</a><br>
+	<a href="https://tailieur.netlify.app/ref/mvca.pdf" target="_blank">[URL_1]</a><br>
+	</td>
+</tr>
+<tr id="bib_stata_ca" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@misc{stata_ca,
+  author = {STATA Manual},
+  title = {Simple correspondence analysis},
+  note = {• Biện luận đồ thị CA biplot},
+  url = {https://www.stata.com/manuals/mvca.pdf},
+  url_1 = {https://tailieur.netlify.app/ref/mvca.pdf}
+}
+</pre></td>
+</tr>
+<tr id="nvtuan_lamsangthongke" class="entry">
+    <td><img src="https://applyr.netlify.app/ref/lam_sang_thong_ke.png" width="100" height="150"/></td>
+	<td>Tuấn, N.V.</td>
+	<td>Lâm sàng thống kê <p class="infolinks">[<a href="javascript:toggleInfo('nvtuan_lamsangthongke','bibtex')">BibTeX</a>]</p></td>
+	<td><br/></td>
+	<td></td>
+	<td>&nbsp;</td>
+	<td>misc</td>
+	<td><a href="https://ykhoa.net/baigiang/index.htm" target="_blank">[URL]</a><br>
+	<br>
+	</td>
+</tr>
+<tr id="bib_nvtuan_lamsangthongke" class="bibtex noshow">
+<td colspan="8"><b>BibTeX</b>:
+<pre>
+@misc{nvtuan_lamsangthongke,
+  author = {Nguyễn Văn Tuấn},
+  title = {Lâm sàng thống kê},
+  url = {https://ykhoa.net/baigiang/index.htm}
+}
+</pre></td>
+</tr>
+</tbody>
+</table>
+<footer>
+ <small>Created by <a href="https://www.tuhocr.com/" target="_blank">Tự Học R</a> on 2024/06/14 using <a href="https://www.jabref.org/" target="_blank">JabRef</a>. These materials are only for educational purposes. Best view on 1920 x 1080. Right-click on link to open file.</small>
+</footer>
+<!-- file generated by JabRef -->
+</body>
+</html>
