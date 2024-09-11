@@ -1,0 +1,74 @@
+\documentclass[a4paper]{article}
+\usepackage[a4paper, total={6in,10in}]{geometry}
+\usepackage[utf8]{vietnam}
+\usepackage{indentfirst}
+%\usepackage{biblatex-apa} bản chất package này cần phải tự copy thủ công vào
+% C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\bbx...
+%Hiển thị fields https://sg.mirrors.cicku.me/ctan/macros/latex/contrib/biblatex/doc/biblatex.pdf#page=11
+\usepackage[
+backend=biber,
+style=apa,
+sorting=ynt
+]{biblatex} %TeXworks: pdfLaTeX ==> Biber ==> pdfLaTeX
+\addbibresource{F:/VAULT12/GRAND/grand.bib} %Imports bibliography file
+%\cite, \textcite, \parencite, \citeyear, \citeauthor
+%\AtEveryBibitem{\clearfield{url}}
+\AtEveryBibitem{\clearfield{note}}
+
+\usepackage{phonetic} %Sử dụng cho superscript \uplett
+
+\usepackage{datetime2} %\Today
+
+%\usepackage{fontawesome5} %Logo R \faRProject
+%Proper way to typeset the symbol for R in LaTeX?
+%https://stat.ethz.ch/pipermail/r-help/2007-February/125688.html
+%It is essentially a capital R in the default serif font.
+
+ \usepackage{graphicx} %Chèn ảnh
+\graphicspath{ {./img/} }
+
+%\usepackage[stable]{footmisc} %Chèn footnote
+
+\usepackage{xcolor}
+\definecolor{EAFAF1}{HTML}{EAFAF1}
+
+\usepackage{minted} %Giúp modify code
+%Cách dùng: setup trên TeXworks ở windows theo hình này https://t.me/c/1885138537/31
+%Sau đó cài package của Python trong cmd https://t.me/c/1885138537/32
+%https://tex.stackexchange.com/questions/374001/insert-r-code-in-latex
+\usemintedstyle{emacs}
+\renewcommand\theFancyVerbLine{\normalsize\arabic{FancyVerbLine}} %Set line number size
+
+\usepackage{float} %Set vị trí table và figure
+%https://stackoverflow.com/questions/1673942/latex-table-positioning
+
+\setlength\parindent{0pt} %No indent
+
+\usepackage[hidelinks]{hyperref} %Nên đặt ở cuối preamble
+
+%%%%%%
+\title{Jabref}
+\author{Thanks}
+\date{\Today} %Package datetime2
+%%%%%%
+
+\begin{document}
+
+\nocite{*}
+
+
+
+%\printbibliography[
+%heading=bibintoc,
+%title={Tài liệu tham khảo}
+%] %Package biblatex
+
+%Filters bibliography
+%\printbibliography[keyword={vn},title={Tài liệu tiếng Việt}]
+%\printbibliography[keyword={en},title={Tài liệu tiếng Anh}]
+\printbibliography[type={article},title={Tạp chí khoa học}]
+\printbibliography[type={book},title={Sách tham khảo}]
+\printbibliography[type={unpublished},title={Lưu hành nội bộ}]
+\printbibliography[type={misc},title={Tài liệu khác}]
+
+\end{document}

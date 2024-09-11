@@ -1,0 +1,301 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{ynt/apasortcite//global/global}
+    \entry{xiao2001}{article}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=0f9a3db9264778133cf57d601a816621}{%
+           family={Xiao},
+           familyi={X\bibinitperiod},
+           given={Yongshun},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{fullhash}{0f9a3db9264778133cf57d601a816621}
+      \strng{bibnamehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{authorbibnamehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{authornamehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{authorfullhash}{0f9a3db9264778133cf57d601a816621}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Mathematical and Computer Modelling}
+      \field{title}{Formulae for Calculating the Instantaneous Rate of Natural Mortality of Animals from Its Surrogates}
+      \field{volume}{33}
+      \field{year}{2001}
+      \true{nocite}
+      \field{pages}{783\bibrangedash 792}
+      \range{pages}{10}
+      \verb{file}
+      \verb :F\:/VAULT12/GRAND/poisson/xiao2001.pdf:PDF
+      \endverb
+      \verb{urlraw}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/xiao2001.pdf
+      \endverb
+      \verb{url}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/xiao2001.pdf
+      \endverb
+    \endentry
+    \entry{mainguy2021}{article}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=5a9dbe33446dc2513df8143b361f17d1}{%
+           family={Mainguy},
+           familyi={M\bibinitperiod},
+           given={Julien},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d559803e9bd81ecbf7cac45925280330}{%
+           family={Moral},
+           familyi={M\bibinitperiod},
+           given={Rafael\bibnamedelimb de\bibnamedelima Andrade},
+           giveni={R\bibinitperiod\bibinitdelim d\bibinitperiod\bibinitdelim A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{fullhash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{bibnamehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{authorbibnamehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{authornamehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{authorfullhash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{North American Journal of Fisheries Management}
+      \field{number}{5}
+      \field{title}{An Improved Method for the Estimation and Comparison of Mortality Rates in Fish from Catch‐Curve Data}
+      \field{volume}{41}
+      \field{year}{2021}
+      \true{nocite}
+      \field{pages}{1436\bibrangedash 1453}
+      \range{pages}{18}
+      \verb{file}
+      \verb :F\:/VAULT12/GRAND/poisson/mainguy2021.pdf:PDF
+      \endverb
+      \verb{urlraw}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/mainguy2021.pdf
+      \endverb
+      \verb{url}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/mainguy2021.pdf
+      \endverb
+    \endentry
+    \entry{tesfaye2021}{article}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=912e4dde59e2832c9d36b8e4661ffedb}{%
+           family={Tesfaye},
+           familyi={T\bibinitperiod},
+           given={Million},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=cac9d2ff4ae96a355282f71efb16299a}{%
+           family={Tesfaye},
+           familyi={T\bibinitperiod},
+           given={Gashaw},
+           giveni={G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=44293232778408b7f55b40837369ac68}{%
+           family={Getahun},
+           familyi={G\bibinitperiod},
+           given={Abebe},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{57f59270a87930e3d3a3175ddbf7fdff}
+      \strng{fullhash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \strng{bibnamehash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \strng{authorbibnamehash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \strng{authornamehash}{57f59270a87930e3d3a3175ddbf7fdff}
+      \strng{authorfullhash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Lakes \& Reservoirs: Science, Policy and Management for Sustainable Use}
+      \field{number}{3}
+      \field{title}{Growth and status of {Nile} tilapia (\textit{Oreochromis niloticus} L.) stock in Lake Chamo, Ethiopia}
+      \field{volume}{26}
+      \field{year}{2021}
+      \true{nocite}
+      \field{pages}{1\bibrangedash 17}
+      \range{pages}{17}
+      \verb{file}
+      \verb :F\:/VAULT12/GRAND/poisson/tesfaye2021.pdf:PDF
+      \endverb
+      \verb{urlraw}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/tesfaye2021.pdf
+      \endverb
+      \verb{url}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/tesfaye2021.pdf
+      \endverb
+    \endentry
+  \enddatalist
+  \datalist[entry]{ynt/global//global/global}
+    \entry{xiao2001}{article}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=0f9a3db9264778133cf57d601a816621}{%
+           family={Xiao},
+           familyi={X\bibinitperiod},
+           given={Yongshun},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{fullhash}{0f9a3db9264778133cf57d601a816621}
+      \strng{bibnamehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{authorbibnamehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{authornamehash}{0f9a3db9264778133cf57d601a816621}
+      \strng{authorfullhash}{0f9a3db9264778133cf57d601a816621}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Mathematical and Computer Modelling}
+      \field{title}{Formulae for Calculating the Instantaneous Rate of Natural Mortality of Animals from Its Surrogates}
+      \field{volume}{33}
+      \field{year}{2001}
+      \true{nocite}
+      \field{pages}{783\bibrangedash 792}
+      \range{pages}{10}
+      \verb{file}
+      \verb :F\:/VAULT12/GRAND/poisson/xiao2001.pdf:PDF
+      \endverb
+      \verb{urlraw}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/xiao2001.pdf
+      \endverb
+      \verb{url}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/xiao2001.pdf
+      \endverb
+    \endentry
+    \entry{mainguy2021}{article}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=5a9dbe33446dc2513df8143b361f17d1}{%
+           family={Mainguy},
+           familyi={M\bibinitperiod},
+           given={Julien},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d559803e9bd81ecbf7cac45925280330}{%
+           family={Moral},
+           familyi={M\bibinitperiod},
+           given={Rafael\bibnamedelimb de\bibnamedelima Andrade},
+           giveni={R\bibinitperiod\bibinitdelim d\bibinitperiod\bibinitdelim A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{fullhash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{bibnamehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{authorbibnamehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{authornamehash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \strng{authorfullhash}{59830b8b345f84d935cd7e3e8a15cb33}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{North American Journal of Fisheries Management}
+      \field{number}{5}
+      \field{title}{An Improved Method for the Estimation and Comparison of Mortality Rates in Fish from Catch‐Curve Data}
+      \field{volume}{41}
+      \field{year}{2021}
+      \true{nocite}
+      \field{pages}{1436\bibrangedash 1453}
+      \range{pages}{18}
+      \verb{file}
+      \verb :F\:/VAULT12/GRAND/poisson/mainguy2021.pdf:PDF
+      \endverb
+      \verb{urlraw}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/mainguy2021.pdf
+      \endverb
+      \verb{url}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/mainguy2021.pdf
+      \endverb
+    \endentry
+    \entry{tesfaye2021}{article}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=912e4dde59e2832c9d36b8e4661ffedb}{%
+           family={Tesfaye},
+           familyi={T\bibinitperiod},
+           given={Million},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=cac9d2ff4ae96a355282f71efb16299a}{%
+           family={Tesfaye},
+           familyi={T\bibinitperiod},
+           given={Gashaw},
+           giveni={G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=44293232778408b7f55b40837369ac68}{%
+           family={Getahun},
+           familyi={G\bibinitperiod},
+           given={Abebe},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{57f59270a87930e3d3a3175ddbf7fdff}
+      \strng{fullhash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \strng{bibnamehash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \strng{authorbibnamehash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \strng{authornamehash}{57f59270a87930e3d3a3175ddbf7fdff}
+      \strng{authorfullhash}{6cad9a5808c7dbf49276ca95ddfbee74}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Lakes \& Reservoirs: Science, Policy and Management for Sustainable Use}
+      \field{number}{3}
+      \field{title}{Growth and status of {Nile} tilapia (\textit{Oreochromis niloticus} L.) stock in Lake Chamo, Ethiopia}
+      \field{volume}{26}
+      \field{year}{2021}
+      \true{nocite}
+      \field{pages}{1\bibrangedash 17}
+      \range{pages}{17}
+      \verb{file}
+      \verb :F\:/VAULT12/GRAND/poisson/tesfaye2021.pdf:PDF
+      \endverb
+      \verb{urlraw}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/tesfaye2021.pdf
+      \endverb
+      \verb{url}
+      \verb https://longliveturtle.github.io/prime/GRAND/poisson/tesfaye2021.pdf
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
