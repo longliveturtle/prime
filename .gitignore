@@ -1,0 +1,17 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.aux
+*.log
+*.out
+*.gz
+*.pygtex
+*.pygstyle
+*.js
+*.css
+*.json
+*.woff
+latex/test
+homework/.cache
+public/qbook1/_book
